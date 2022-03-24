@@ -1,13 +1,14 @@
 
-
 <template>
     <div id="threeCubeContainer"></div>
 </template>
 
 <script>
-    import * as Three from 'three'
+    /* eslint-disable */
+    import * as THREE from 'three'
 
     import {EVENT_EMITTER} from '../libs/constants' 
+    // import {THREEx} from '../libs/dynamictexture' 
 
     
     export default {
@@ -20,28 +21,49 @@
 
         methods: {
             init() {
+                // SOURCE: https://www.youtube.com/watch?v=IA3HjAV2nzU
+
+
                 let container = document.getElementById('threeCubeContainer');
 
-                this.camera = new Three.PerspectiveCamera(70, container.clientWidth/container.clientHeight, 0.01, 10);
+                this.camera = new THREE.PerspectiveCamera(70, container.clientWidth/container.clientHeight, 0.01, 10);
                 this.camera.position.z = 1;
 
-                this.scene = new Three.Scene();
-
-                let geometry = new Three.BoxGeometry(0.2, 0.2, 0.2);
-                let material = new Three.MeshNormalMaterial();
-
-                this.mesh = new Three.Mesh(geometry, material);
-                this.scene.add(this.mesh);
-
-                this.renderer = new Three.WebGLRenderer({antialias: true});
+                this.renderer = new THREE.WebGLRenderer({antialias: true});
                 this.renderer.setSize(container.clientWidth, container.clientHeight);
                 container.appendChild(this.renderer.domElement);
+
+                this.scene = new THREE.Scene();
+
+                // var dynamictexture = new THREEx.DynamicTexture(512, 512);
+                // dynamictexture.context.font = "bolder 90px verdana";
+                // dynamictexture.texture.needsUpdate = true;
+                // dynamictexture.clear('#d35400').drawText('Text', undefined, 256, 'green');
+                const ambient = new THREE.AmbientLight(0x222222);
+                this.scene.add(ambient);
+
+                const light = new THREE.DirectionalLight(0xffffff);
+                light.position.set(10, 0, 6);
+                this.scene.add(light)
+
+                const loader = new THREE.TextureLoader();
+                const texture = loader.load(
+                    require('../assets/marble.jpg')
+                )
+                const material = new THREE.MeshLambertMaterial({
+                    map: texture,
+                });
+
+                let geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.scene.add(this.mesh);
             },
 
-            rotateFromCoords(x, y) {
-                requestAnimationFrame(this.animate);
-                this.mesh.rotation.x = x;
-                this.mesh.rotation.y = y;
+            rotateFromCoords(relX, relY) {
+                // requestAnimationFrame(this.animate);
+                this.mesh.rotation.y = (Math.PI * 2) * -relX * 1;
+                this.mesh.rotation.x = (Math.PI) * relY + Math.PI/2;
                 this.renderer.render(this.scene, this.camera);  
             },
 
@@ -56,9 +78,10 @@
         mounted() {
             this.init();
             // this.animate();
+            this.renderer.render(this.scene, this.camera);  
 
-            EVENT_EMITTER.on('mouseMovedTo', (event) => {
-                this.rotateFromCoords(event.clientX, event.clientY)
+            EVENT_EMITTER.on('mouseMovedTo', (coords) => {
+                this.rotateFromCoords(coords.relX, coords.relY)
             });
         }
     }
