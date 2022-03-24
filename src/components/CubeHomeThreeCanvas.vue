@@ -15,14 +15,11 @@
         name: "CubeHomeThreeCanvas",
 
         data() {
-            // SOURCE: https://stackoverflow.com/questions/65693108/threejs-component-working-in-vuejs-2-but-not-3
             return {}
         },
 
         methods: {
             init() {
-                // SOURCE: https://www.youtube.com/watch?v=IA3HjAV2nzU
-
 
                 let container = document.getElementById('threeCubeContainer');
 
@@ -35,10 +32,6 @@
 
                 this.scene = new THREE.Scene();
 
-                // var dynamictexture = new THREEx.DynamicTexture(512, 512);
-                // dynamictexture.context.font = "bolder 90px verdana";
-                // dynamictexture.texture.needsUpdate = true;
-                // dynamictexture.clear('#d35400').drawText('Text', undefined, 256, 'green');
                 const ambient = new THREE.AmbientLight(0x222222);
                 this.scene.add(ambient);
 
@@ -50,6 +43,7 @@
                 const texture = loader.load(
                     require('../assets/marble.jpg')
                 )
+                // const texture = this.SpriteSheetTexture('../assets/grid-sprite.jpg', 4, 4, 100, 16);
                 const material = new THREE.MeshLambertMaterial({
                     map: texture,
                 });
@@ -59,6 +53,40 @@
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.scene.add(this.mesh);
             },
+
+            SpriteSheetTexture(imageURL, framesX, framesY, frameDelay, _endFrame) {
+                // https://stackoverflow.com/questions/16029103/three-js-using-2d-texture-sprite-for-animation-planegeometry/16039034#16039034
+                var timer, frameWidth, frameHeight, 
+                x = 0, y = 0, count = 0, startFrame = 0, 
+                endFrame = _endFrame || framesX * framesY,
+                canvas = document.createElement('canvas'),
+                ctx = canvas.getContext('2d'),
+                canvasTexture = new THREE.CanvasTexture(canvas),
+                img = new Image();
+                img.onload = function(){
+                    canvas.width = frameWidth = img.width / framesX;
+                    canvas.height = frameHeight = img.height / framesY;
+                    timer = setInterval(nextFrame, frameDelay);
+                }
+                img.src = imageURL;
+                function nextFrame() {
+                    count++;
+
+                    if(count >= endFrame ) {
+                        count = 0;
+                    };
+
+                    x = (count % framesX) * frameWidth;
+                    y = ((count / framesX)|0) * frameHeight;
+
+                    ctx.clearRect(0, 0, frameWidth, frameHeight);
+                    ctx.drawImage(img, x, y, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+
+                    canvasTexture.needsUpdate = true;
+                }
+                return canvasTexture;
+            },
+
 
             rotateFromCoords(relX, relY) {
                 // requestAnimationFrame(this.animate);
